@@ -27,5 +27,32 @@ migrate_working_dir/
 **/doc/api/
 .dart_tool/
 .flutter-plugins-dependencies
-/build/
+**/build/
 /coverage/
+
+# Flutter build outputs
+*.apk
+*.aab
+*.ipa
+*.app
+*.dSYM.zip
+*.dSYM
+
+# Android build outputs
+**/android/**/build/
+**/android/.gradle/
+**/android/app/build/
+**/android/local.properties
+
+# iOS build outputs
+**/ios/**/build/
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/ephemeral/
+**/ios/Runner/GeneratedPluginRegistrant.*
+
+# Web build outputs
+**/web/build/
