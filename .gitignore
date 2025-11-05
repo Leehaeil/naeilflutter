@@ -58,4 +58,6 @@ migrate_working_dir/
 **/web/build/
 
 # Generated sample projects
-sample/
+sample/build/
+sample/.dart_tool/
+sample/pubspec.lock
