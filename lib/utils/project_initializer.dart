@@ -58,11 +58,10 @@ class ProjectInitializer {
         logger: logger,
       );
 
-      // 4. main.dart에서 패키지 이름 업데이트
-      logger.detail('main.dart 업데이트 중...');
-      await _updateMainDart(
+      // 4. 모든 Dart 파일의 import 경로 업데이트
+      logger.detail('모든 Dart 파일의 import 경로 업데이트 중...');
+      await _updateAllDartImports(
         targetPath: targetPath,
-        projectName: projectName,
         packageId: packageId,
         logger: logger,
       );
@@ -167,29 +166,47 @@ class ProjectInitializer {
     await targetPubspec.writeAsString(content);
   }
 
-  /// main.dart 업데이트
-  static Future<void> _updateMainDart({
+  /// 모든 Dart 파일의 import 경로 업데이트
+  static Future<void> _updateAllDartImports({
     required String targetPath,
-    required String projectName,
     required String packageId,
     required Logger logger,
   }) async {
-    final mainDart = File(path.join(targetPath, 'lib', 'main.dart'));
-    if (!mainDart.existsSync()) {
-      logger.warn('⚠️  main.dart를 찾을 수 없습니다.');
+    final libDir = Directory(path.join(targetPath, 'lib'));
+    if (!libDir.existsSync()) {
+      logger.warn('⚠️  lib 폴더를 찾을 수 없습니다.');
       return;
     }
 
-    var content = await mainDart.readAsString();
     final packageName = _packageIdToPackageName(packageId);
+    int updatedCount = 0;
 
-    // import 경로의 패키지 이름 업데이트
-    content = content.replaceAll(
-      RegExp(r"package:naeil_flutter_init/"),
-      'package:$packageName/',
-    );
+    // lib 폴더 내의 모든 .dart 파일 찾기
+    await for (final entity in libDir.list(recursive: true)) {
+      if (entity is File && entity.path.endsWith('.dart')) {
+        try {
+          var content = await entity.readAsString();
+          final originalContent = content;
 
-    await mainDart.writeAsString(content);
+          // package:naeil_flutter_init/를 새로운 패키지 이름으로 교체
+          content = content.replaceAll(
+            RegExp(r"package:naeil_flutter_init/"),
+            'package:$packageName/',
+          );
+
+          // 내용이 변경되었으면 파일에 저장
+          if (content != originalContent) {
+            await entity.writeAsString(content);
+            updatedCount++;
+            logger.detail('업데이트: ${path.relative(entity.path, from: targetPath)}');
+          }
+        } catch (e) {
+          logger.warn('⚠️  파일 업데이트 실패: ${entity.path} - $e');
+        }
+      }
+    }
+
+    logger.detail('총 $updatedCount개 Dart 파일의 import 경로를 업데이트했습니다.');
   }
 
   /// Android 패키지 이름 업데이트
@@ -293,6 +310,83 @@ class ProjectInitializer {
         'PRODUCT_BUNDLE_IDENTIFIER = $packageId;',
       );
       await projectPbxproj.writeAsString(content);
+    }
+  }
+
+  /// 기존 프로젝트의 import 경로 업데이트
+  /// pubspec.yaml에서 패키지 이름을 읽어서 모든 Dart 파일의 import 경로를 업데이트합니다
+  static Future<void> updateExistingProjectImports({
+    required String projectPath,
+    required Logger logger,
+  }) async {
+    try {
+      final pubspecFile = File(path.join(projectPath, 'pubspec.yaml'));
+      if (!pubspecFile.existsSync()) {
+        logger.err('❌ pubspec.yaml을 찾을 수 없습니다: $projectPath');
+        return;
+      }
+
+      // pubspec.yaml에서 패키지 이름 읽기
+      final pubspecContent = await pubspecFile.readAsString();
+      final nameMatch = RegExp(r'^name:\s*([^\s]+)', multiLine: true)
+          .firstMatch(pubspecContent);
+      
+      if (nameMatch == null) {
+        logger.err('❌ pubspec.yaml에서 패키지 이름을 찾을 수 없습니다.');
+        return;
+      }
+
+      final packageName = nameMatch.group(1)?.trim();
+      if (packageName == null || packageName.isEmpty) {
+        logger.err('❌ 유효하지 않은 패키지 이름입니다.');
+        return;
+      }
+
+      logger.info('📦 패키지 이름: $packageName');
+      logger.info('🔄 import 경로 업데이트 중...');
+
+      final libDir = Directory(path.join(projectPath, 'lib'));
+      if (!libDir.existsSync()) {
+        logger.warn('⚠️  lib 폴더를 찾을 수 없습니다.');
+        return;
+      }
+
+      int updatedCount = 0;
+
+      // lib 폴더 내의 모든 .dart 파일 찾기
+      await for (final entity in libDir.list(recursive: true)) {
+        if (entity is File && entity.path.endsWith('.dart')) {
+          try {
+            var content = await entity.readAsString();
+            final originalContent = content;
+
+            // package:naeil_flutter_init/를 새로운 패키지 이름으로 교체
+            content = content.replaceAll(
+              RegExp(r"package:naeil_flutter_init/"),
+              'package:$packageName/',
+            );
+
+            // 내용이 변경되었으면 파일에 저장
+            if (content != originalContent) {
+              await entity.writeAsString(content);
+              updatedCount++;
+              logger.detail('업데이트: ${path.relative(entity.path, from: projectPath)}');
+            }
+          } catch (e) {
+            logger.warn('⚠️  파일 업데이트 실패: ${entity.path} - $e');
+          }
+        }
+      }
+
+      if (updatedCount > 0) {
+        logger.success('✅ 총 $updatedCount개 Dart 파일의 import 경로를 업데이트했습니다.');
+      } else {
+        logger.info('ℹ️  업데이트할 파일이 없습니다.');
+      }
+    } catch (e, stackTrace) {
+      logger.err('❌ import 경로 업데이트 중 오류 발생: $e');
+      logger.detail('스택 트레이스: $stackTrace');
+      rethrow;
     }
   }
 
