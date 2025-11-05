@@ -63,6 +63,7 @@ class FlutterInitCommand {
         samplePath: actualSamplePath,
         projectName: projectName,
         packageId: packageId,
+        platforms: platforms,
       );
 
       logger.success('✅ 프로젝트 초기화가 완료되었습니다!');

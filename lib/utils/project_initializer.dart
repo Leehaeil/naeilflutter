@@ -12,6 +12,7 @@ class ProjectInitializer {
     required String samplePath,
     required String projectName,
     required String packageId,
+    required List<String> platforms,
   }) async {
     final logger = Logger();
 
@@ -29,6 +30,8 @@ class ProjectInitializer {
         return;
       }
 
+      final hasWeb = platforms.contains('web');
+
       // 1. lib 폴더 복사
       logger.detail('lib 폴더 구조 복사 중...');
       await _copyDirectory(
@@ -37,15 +40,25 @@ class ProjectInitializer {
         logger: logger,
       );
 
-      // 2. web 폴더 복사 (있는 경우)
-      final sampleWebDir = Directory(path.join(samplePath, 'web'));
-      if (sampleWebDir.existsSync()) {
-        logger.detail('web 폴더 복사 중...');
-        await _copyDirectory(
-          source: path.join(samplePath, 'web'),
-          target: path.join(targetPath, 'web'),
-          logger: logger,
-        );
+      // 2. web 폴더 복사 (web이 선택된 경우에만)
+      if (hasWeb) {
+        final sampleWebDir = Directory(path.join(samplePath, 'web'));
+        if (sampleWebDir.existsSync()) {
+          logger.detail('web 폴더 복사 중...');
+          await _copyDirectory(
+            source: path.join(samplePath, 'web'),
+            target: path.join(targetPath, 'web'),
+            logger: logger,
+          );
+        }
+      } else {
+        logger.detail('web이 선택되지 않아 web 폴더를 복사하지 않습니다.');
+        // lib/web 폴더가 있으면 삭제
+        final libWebDir = Directory(path.join(targetPath, 'lib', 'web'));
+        if (libWebDir.existsSync()) {
+          logger.detail('lib/web 폴더 삭제 중...');
+          await libWebDir.delete(recursive: true);
+        }
       }
 
       // 3. pubspec.yaml 업데이트
@@ -63,6 +76,7 @@ class ProjectInitializer {
       await _updateAllDartImports(
         targetPath: targetPath,
         packageId: packageId,
+        hasWeb: hasWeb,
         logger: logger,
       );
 
@@ -170,6 +184,7 @@ class ProjectInitializer {
   static Future<void> _updateAllDartImports({
     required String targetPath,
     required String packageId,
+    required bool hasWeb,
     required Logger logger,
   }) async {
     final libDir = Directory(path.join(targetPath, 'lib'));
@@ -194,6 +209,21 @@ class ProjectInitializer {
             'package:$packageName/',
           );
 
+          // web이 선택되지 않았을 때 특정 파일들 수정
+          if (!hasWeb) {
+            final relativePath = path.relative(entity.path, from: targetPath);
+            
+            // main.dart: 조건부 import 제거하고 bootstrap_mobile.dart만 사용
+            if (relativePath == 'lib/main.dart') {
+              content = _updateMainDartForMobile(content, packageName);
+            }
+            
+            // secure_storage.dart: web 조건부 import 제거
+            if (relativePath == 'lib/app/utils/secure_storage.dart') {
+              content = _updateSecureStorageForMobile(content, packageName);
+            }
+          }
+
           // 내용이 변경되었으면 파일에 저장
           if (content != originalContent) {
             await entity.writeAsString(content);
@@ -207,6 +237,36 @@ class ProjectInitializer {
     }
 
     logger.detail('총 $updatedCount개 Dart 파일의 import 경로를 업데이트했습니다.');
+  }
+
+  /// main.dart를 모바일 전용으로 수정 (web 조건부 import 제거)
+  static String _updateMainDartForMobile(String content, String packageName) {
+    // 조건부 import를 제거하고 bootstrap_mobile.dart만 사용
+    // 여러 줄에 걸친 import 패턴을 처리 (줄바꿈, 공백, 탭 등 다양한 형식 지원)
+    content = content.replaceAll(
+      RegExp(
+        r"import 'package:[^']+/main/bootstrap_mobile\.dart'[\s\n]*if\s*\(dart\.library\.html\)\s*'package:[^']+/web/bootstrap_web\.dart'[\s\n]*as app;",
+        multiLine: true,
+        dotAll: true,
+      ),
+      "import 'package:$packageName/main/bootstrap_mobile.dart' as app;",
+    );
+    return content;
+  }
+
+  /// secure_storage.dart를 모바일 전용으로 수정 (web 조건부 import 제거)
+  static String _updateSecureStorageForMobile(String content, String packageName) {
+    // web 조건부 import를 제거하고 web_storage_stub.dart만 사용
+    // 여러 줄에 걸친 import 패턴을 처리 (줄바꿈, 공백, 탭 등 다양한 형식 지원)
+    content = content.replaceAll(
+      RegExp(
+        r"import 'package:[^']+/app/utils/web_storage_stub\.dart'[\s\n]*if\s*\(dart\.library\.html\)\s*'package:[^']+/web/utils/web_storage_adapter\.dart';",
+        multiLine: true,
+        dotAll: true,
+      ),
+      "import 'package:$packageName/app/utils/web_storage_stub.dart';",
+    );
+    return content;
   }
 
   /// Android 패키지 이름 업데이트
