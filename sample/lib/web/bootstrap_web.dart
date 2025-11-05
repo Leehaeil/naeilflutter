@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:naeil_flutter_init/app/services/auth_service.dart';
+import 'package:naeil_flutter_init/web/services/auth_service.dart';
 import 'package:naeil_flutter_init/web/web_app.dart';
 
 @pragma('vm:entry-point')

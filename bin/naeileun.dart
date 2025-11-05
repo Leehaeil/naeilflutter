@@ -12,21 +12,14 @@ void main(List<String> args) async {
     ..addCommand(
       'flutter',
       ArgParser()
-        ..addCommand(
-          'init',
-          ArgParser(),
-        )
-        ..addCommand(
-          'addpage',
-          ArgParser(),
-        ),
+        ..addCommand('init', ArgParser())
+        ..addCommand('addpage', ArgParser()),
     );
 
   try {
     final result = parser.parse(args);
 
-    if (result.command?.name == 'flutter' &&
-        result.command?.arguments.isNotEmpty == true) {
+    if (result.command?.name == 'flutter' && result.command?.arguments.isNotEmpty == true) {
       final flutterCommand = result.command!.arguments[0];
 
       if (flutterCommand == 'init') {
@@ -69,8 +62,8 @@ void _showUsage(Logger logger) {
 Flutter 프로젝트 초기화 CLI 도구
 
 사용법:
-  naeileun flutter init
-  naeileun flutter addpage
+  naeil flutter init
+  naeil flutter addpage
 
 명령어:
   flutter init     Flutter 프로젝트를 생성하고 초기화합니다

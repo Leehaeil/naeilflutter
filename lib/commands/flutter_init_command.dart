@@ -3,7 +3,6 @@ import 'package:interact_cli/interact_cli.dart';
 import 'package:mason_logger/mason_logger.dart';
 import 'package:naeilflutter/utils/flutter_runner.dart';
 import 'package:naeilflutter/utils/project_initializer.dart';
-import 'package:path/path.dart' as path;
 
 /// Flutter 프로젝트 초기화 명령어
 class FlutterInitCommand {
@@ -43,26 +42,11 @@ class FlutterInitCommand {
 
       logger.success('✅ Flutter 프로젝트가 생성되었습니다: $projectPath');
 
-      // 5. sample 폴더 구조로 프로젝트 초기화
+      // 5. 템플릿 기반으로 프로젝트 구조 생성
       logger.info('\n🔧 프로젝트 구조를 초기화하는 중...');
-
-      // 실제 sample 폴더 경로 찾기
-      // 로컬 개발 환경과 전역 설치 환경 모두 지원
-      final actualSamplePath = _findSamplePath();
-
-      if (actualSamplePath == null || !Directory(actualSamplePath).existsSync()) {
-        logger.err('❌ sample 폴더를 찾을 수 없습니다.');
-        if (actualSamplePath != null) {
-          logger.detail('검색한 경로: $actualSamplePath');
-        }
-        exit(1);
-      }
-
-      logger.detail('sample 폴더 경로: $actualSamplePath');
 
       await ProjectInitializer.initialize(
         targetPath: projectPath,
-        samplePath: actualSamplePath,
         projectName: projectName,
         packageId: packageId,
         platforms: platforms,
@@ -139,69 +123,5 @@ class FlutterInitCommand {
     }
 
     return selected.map((index) => platforms[index]).toList();
-  }
-
-  /// sample 폴더 경로 찾기
-  /// 로컬 개발 환경과 전역 설치 환경(pub.dev) 모두 지원
-  String? _findSamplePath() {
-    // 방법 1: 현재 스크립트 위치 기반 (로컬 개발 환경)
-    try {
-      final scriptPath = Platform.script.toFilePath();
-      if (scriptPath.isNotEmpty) {
-        final binDir = path.dirname(scriptPath);
-        final projectRoot = path.dirname(binDir);
-        final samplePath = path.join(projectRoot, 'sample');
-        if (Directory(samplePath).existsSync()) {
-          return samplePath;
-        }
-      }
-    } catch (e) {
-      // Platform.script가 file:// URI가 아닐 수 있음
-    }
-
-    // 방법 2: PUB_CACHE 환경 변수 기반 (전역 설치 환경)
-    final pubCachePath = Platform.environment['PUB_CACHE'];
-    if (pubCachePath != null) {
-      // pub.dev에서 설치된 경우: ~/.pub-cache/hosted/pub.dev/naeilflutter-x.x.x/
-      final hostedPath = path.join(pubCachePath, 'hosted', 'pub.dev');
-      if (Directory(hostedPath).existsSync()) {
-        try {
-          final dir = Directory(hostedPath);
-          final packages = dir
-              .listSync()
-              .where(
-                (entity) =>
-                    entity is Directory && path.basename(entity.path).startsWith('naeilflutter-'),
-              )
-              .toList();
-
-          // 최신 버전 찾기 (가장 큰 버전 번호)
-          packages.sort((a, b) {
-            final aVersion = _extractVersion(path.basename(a.path));
-            final bVersion = _extractVersion(path.basename(b.path));
-            return bVersion.compareTo(aVersion);
-          });
-
-          for (final packageDir in packages) {
-            if (packageDir is Directory) {
-              final samplePath = path.join(packageDir.path, 'sample');
-              if (Directory(samplePath).existsSync()) {
-                return samplePath;
-              }
-            }
-          }
-        } catch (e) {
-          // 디렉토리 탐색 실패
-        }
-      }
-    }
-
-    return null;
-  }
-
-  /// 경로에서 버전 번호 추출 (예: "naeilflutter-0.0.1" -> "0.0.1")
-  String _extractVersion(String pathName) {
-    final match = RegExp(r'naeilflutter-(\d+\.\d+\.\d+)').firstMatch(pathName);
-    return match?.group(1) ?? '0.0.0';
   }
 }

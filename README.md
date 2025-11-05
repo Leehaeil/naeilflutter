@@ -1,11 +1,13 @@
 # naeilflutter
 
-Flutter 프로젝트 초기화 및 페이지 추가를 위한 CLI 도구입니다. GetX 기반 프로젝트 구조를 자동으로 생성합니다.
+Flutter 프로젝트 초기화 및 페이지 추가를 위한 CLI 도구입니다. GetX 기반 프로젝트 구조를 자동으로 생성하며, 모바일과 웹을 완전히 분리한 아키텍처를 제공합니다.
 
 ## 기능
 
-- `naeileun flutter init`: Flutter 프로젝트를 생성하고 GetX 기반 프로젝트 구조로 초기화
-- `naeileun flutter addpage`: 기존 Flutter 프로젝트에 새 페이지를 추가 (View, Controller, Binding 자동 생성)
+- `naeil flutter init`: Flutter 프로젝트를 생성하고 GetX 기반 프로젝트 구조로 초기화
+  - 모바일(`lib/mobile/`)과 웹(`lib/web/`) 코드를 완전히 분리하여 생성
+  - 템플릿 기반 직접 생성 (sample 폴더 불필요)
+- `naeil flutter addpage`: 기존 Flutter 프로젝트에 새 페이지를 추가 (View, Controller, Binding 자동 생성)
 
 ## 설치
 
@@ -34,7 +36,7 @@ dart pub global activate --source path .
 ### Flutter 프로젝트 생성
 
 ```bash
-naeileun flutter init
+naeil flutter init
 ```
 
 명령어 실행 시 다음 정보를 입력받습니다:
@@ -52,7 +54,7 @@ naeileun flutter init
 ### 실행 예시
 
 ```bash
-$ naeileun flutter init
+$ naeil flutter init
 
 🚀 Flutter 프로젝트 초기화를 시작합니다...
 
@@ -78,6 +80,12 @@ $ naeileun flutter init
   cd my_app
   flutter pub get
   flutter run
+
+💡 생성된 프로젝트 구조:
+  - lib/main.dart: 플랫폼 자동 분기 (모바일/웹)
+  - lib/mobile/: 모바일 전용 코드 (항상 생성)
+  - lib/web/: 웹 전용 코드 (web 플랫폼 선택 시 생성)
+  - 기본 페이지: splash, login, home 페이지가 자동 생성됨
 ```
 
 ### Flutter 페이지 추가
@@ -85,7 +93,7 @@ $ naeileun flutter init
 기존 Flutter 프로젝트에 새 페이지를 추가할 수 있습니다.
 
 ```bash
-naeileun flutter addpage
+naeil flutter addpage
 ```
 
 명령어 실행 시 다음 정보를 입력받습니다:
@@ -97,7 +105,7 @@ naeileun flutter addpage
 #### 실행 예시
 
 ```bash
-$ naeileun flutter addpage
+$ naeil flutter addpage
 
 📄 Flutter 페이지를 추가합니다...
 
@@ -112,15 +120,16 @@ $ naeileun flutter addpage
 ✅ 페이지가 성공적으로 추가되었습니다!
 
 📝 다음 단계:
-  - 라우팅 설정을 확인하세요: lib/app/routes/app_pages.dart
-  - 생성된 파일을 확인하세요: lib/app/pages/profile/
+  - 라우팅 설정을 확인하세요: lib/{platform}/routes/app_pages.dart
+  - 생성된 파일을 확인하세요: lib/{platform}/pages/profile/
 ```
 
 #### 생성되는 파일 구조
 
 컨트롤러를 사용하는 경우:
+
 ```
-lib/app/pages/{page_name}/
+lib/{platform}/pages/{page_name}/
 ├── controllers/
 │   └── {page_name}_controller.dart
 ├── views/
@@ -130,13 +139,18 @@ lib/app/pages/{page_name}/
 ```
 
 컨트롤러를 사용하지 않는 경우:
+
 ```
-lib/app/pages/{page_name}/
+lib/{platform}/pages/{page_name}/
 └── views/
     └── {page_name}_view.dart
 ```
 
+> **참고**: `{platform}`은 `mobile` 또는 `web`입니다.
+
 ## 프로젝트 구조
+
+### CLI 패키지 구조
 
 ```
 naeilflutter/
@@ -148,11 +162,58 @@ naeilflutter/
 │   │   └── flutter_add_page_command.dart # flutter addpage 명령어 구현
 │   ├── utils/
 │   │   ├── flutter_runner.dart          # Flutter 명령어 실행
-│   │   └── project_initializer.dart    # 프로젝트 초기화 로직
+│   │   ├── project_initializer.dart     # 프로젝트 초기화 로직
+│   │   └── project_template_generator.dart # 템플릿 기반 코드 생성
 │   └── naeilflutter.dart                # 라이브러리 export
-├── sample/                               # Flutter 프로젝트 템플릿
 └── pubspec.yaml
 ```
+
+### 생성되는 Flutter 프로젝트 구조
+
+`naeil flutter init` 명령어로 생성되는 프로젝트 구조:
+
+```
+your_flutter_app/
+├── lib/
+│   ├── main.dart                        # 진입점 (플랫폼 자동 분기)
+│   ├── mobile/                          # 모바일 전용 코드
+│   │   ├── bootstrap_mobile.dart         # 모바일 앱 초기화
+│   │   ├── data/                        # API 통신 레이어
+│   │   │   ├── auth_data.dart
+│   │   │   └── dto/
+│   │   ├── models/                      # 도메인 모델
+│   │   ├── repositories/                # Repository 구현
+│   │   ├── pages/                       # 페이지별 코드
+│   │   │   ├── splash/
+│   │   │   ├── login/
+│   │   │   └── home/
+│   │   ├── routes/                      # 라우팅 설정
+│   │   ├── services/                    # 전역 서비스
+│   │   ├── theme/                       # 테마 설정
+│   │   └── utils/                       # 유틸리티
+│   └── web/                             # 웹 전용 코드 (web 플랫폼 선택 시)
+│       ├── main.dart                    # 웹 진입점
+│       ├── bootstrap_web.dart           # 웹 앱 초기화
+│       ├── web_app.dart                 # 웹 전용 앱 위젯
+│       ├── data/                        # API 통신 레이어
+│       ├── models/                      # 도메인 모델
+│       ├── repositories/                # Repository 구현
+│       ├── pages/                       # 페이지별 코드
+│       ├── routes/                      # 라우팅 설정
+│       ├── services/                    # 전역 서비스
+│       ├── theme/                       # 테마 설정
+│       └── utils/                       # 유틸리티
+├── test/
+│   └── widget_test.dart                 # 기본 테스트 파일
+└── pubspec.yaml                          # 프로젝트 설정
+```
+
+### 주요 특징
+
+- **완전한 플랫폼 분리**: 모바일과 웹 코드가 완전히 독립적으로 분리되어 관리
+- **템플릿 기반 생성**: sample 폴더 없이 직접 코드 생성
+- **GetX 기반**: 상태 관리, 라우팅, 의존성 주입을 GetX로 통합
+- **Repository 패턴**: 데이터 레이어와 비즈니스 로직 분리
 
 ## 의존성
 

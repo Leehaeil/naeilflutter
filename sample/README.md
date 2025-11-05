@@ -26,7 +26,7 @@ Flutter 프로젝트 초기화 템플릿입니다.
 - **Feature-based 구조**: 기능 단위로 코드를 구성하여 유지보수성 향상
 - **GetX 패턴**: 상태 관리, 의존성 주입, 라우팅을 GetX로 통합 관리
 - **Repository 패턴**: 데이터 레이어와 비즈니스 로직 분리
-- **플랫폼 분리**: 모바일과 웹을 분리된 부트스트랩으로 관리
+- **완전한 플랫폼 분리**: 모바일(`lib/mobile/`)과 웹(`lib/web/`)을 완전히 독립적인 구조로 분리
 
 ---
 
@@ -34,7 +34,8 @@ Flutter 프로젝트 초기화 템플릿입니다.
 
 ```
 lib/
-├── app/                          # 앱 공통 코드
+├── mobile/                       # 모바일 전용 코드
+│   ├── bootstrap_mobile.dart     # 모바일 앱 초기화
 │   ├── data/                     # API 통신 레이어 (HTTP 요청)
 │   │   ├── auth_data.dart
 │   │   └── dto/                  # DTO (Data Transfer Object)
@@ -61,12 +62,30 @@ lib/
 │       ├── api.dart
 │       ├── secure_storage.dart
 │       └── permission_service.dart
-├── main/
-│   └── bootstrap_mobile.dart     # 모바일 앱 초기화
-├── web/
-│   ├── bootstrap_web.dart        # 웹 앱 초기화
-│   └── web_app.dart              # 웹 전용 앱 위젯
-└── main.dart                     # 앱 진입점 (플랫폼 자동 분기)
+├── web/                          # 웹 전용 코드
+│   ├── main.dart                 # 웹 진입점
+│   ├── bootstrap_web.dart       # 웹 앱 초기화
+│   ├── web_app.dart              # 웹 전용 앱 위젯
+│   ├── data/                     # API 통신 레이어
+│   │   ├── auth_data.dart
+│   │   └── dto/
+│   │       └── login_dto.dart
+│   ├── models/                   # 도메인 모델
+│   │   └── auth_data.dart
+│   ├── repositories/             # Repository 구현
+│   │   └── auth_repository.dart
+│   ├── pages/                    # 페이지별 코드
+│   │   ├── splash/
+│   │   ├── login/
+│   │   └── home/
+│   ├── routes/                   # 라우팅 설정
+│   ├── services/                 # 전역 서비스
+│   ├── theme/                    # 테마 설정
+│   └── utils/                    # 유틸리티
+│       ├── api.dart
+│       ├── secure_storage.dart
+│       └── cookie_storage.dart
+└── main.dart                     # 모바일 진입점 (플랫폼 자동 분기)
 ```
 
 ---
@@ -127,9 +146,9 @@ Controller → Repository → Data (API)
 
 레이어 설명:
 
-- **Data Layer** (`app/data/`): HTTP 통신만 담당, DTO 사용
-- **Repository Layer** (`app/repositories/`): API 응답을 도메인 모델로 변환
-- **Model Layer** (`app/models/`): 도메인 엔티티 (불변 객체)
+- **Data Layer** (`mobile/data/` 또는 `web/data/`): HTTP 통신만 담당, DTO 사용
+- **Repository Layer** (`mobile/repositories/` 또는 `web/repositories/`): API 응답을 도메인 모델로 변환
+- **Model Layer** (`mobile/models/` 또는 `web/models/`): 도메인 엔티티 (불변 객체)
 - **Controller**: Repository만 의존, DTO를 직접 사용하지 않음
 
 장점:
@@ -142,9 +161,9 @@ Controller → Repository → Data (API)
 
 ## 폴더 구조 상세
 
-### `app/data/` - API 통신 레이어
+### `mobile/data/` 또는 `web/data/` - API 통신 레이어
 
-HTTP 통신만 담당하는 클래스들을 포함합니다.
+HTTP 통신만 담당하는 클래스들을 포함합니다. 모바일과 웹 각각 독립적으로 존재합니다.
 
 **규칙:**
 
@@ -165,9 +184,9 @@ class AuthData {
 }
 ```
 
-### `app/data/dto/` - DTO (Data Transfer Object)
+### `mobile/data/dto/` 또는 `web/data/dto/` - DTO (Data Transfer Object)
 
-서버와의 통신에 사용되는 데이터 전송 객체입니다.
+서버와의 통신에 사용되는 데이터 전송 객체입니다. 모바일과 웹 각각 독립적으로 존재합니다.
 
 **규칙:**
 
@@ -195,9 +214,9 @@ class LoginResponseDto {
 }
 ```
 
-### `app/models/` - 도메인 모델 (Entity)
+### `mobile/models/` 또는 `web/models/` - 도메인 모델 (Entity)
 
-앱 내부에서 사용하는 불변 도메인 모델입니다.
+앱 내부에서 사용하는 불변 도메인 모델입니다. 모바일과 웹 각각 독립적으로 존재합니다.
 
 **규칙:**
 
@@ -225,9 +244,9 @@ class User {
 }
 ```
 
-### `app/repositories/` - Repository 구현
+### `mobile/repositories/` 또는 `web/repositories/` - Repository 구현
 
-API 통신 결과를 도메인 모델로 변환하는 레이어입니다.
+API 통신 결과를 도메인 모델로 변환하는 레이어입니다. 모바일과 웹 각각 독립적으로 존재합니다.
 
 **규칙:**
 
@@ -254,9 +273,9 @@ class AuthRepository {
 }
 ```
 
-### `app/pages/{feature}/` - 페이지별 코드
+### `mobile/pages/{feature}/` 또는 `web/pages/{feature}/` - 페이지별 코드
 
-각 기능별로 분리된 페이지 코드입니다.
+각 기능별로 분리된 페이지 코드입니다. 모바일과 웹 각각 독립적으로 존재합니다.
 
 **구조:**
 
@@ -268,32 +287,32 @@ pages/{feature}/
 └── widgets/        # 페이지 전용 위젯 (선택적)
 ```
 
-### `app/services/` - 전역 서비스
+### `mobile/services/` 또는 `web/services/` - 전역 서비스
 
-앱 전체에서 사용하는 서비스를 포함합니다.
+앱 전체에서 사용하는 서비스를 포함합니다. 모바일과 웹 각각 독립적으로 존재합니다.
 
 **예시:**
 
 - `AuthService`: 인증 상태 관리
 
-### `app/utils/` - 유틸리티
+### `mobile/utils/` 또는 `web/utils/` - 유틸리티
 
-공통으로 사용하는 유틸리티 함수/클래스입니다.
+공통으로 사용하는 유틸리티 함수/클래스입니다. 모바일과 웹 각각 독립적으로 존재합니다.
 
 - `api.dart`: HTTP 통신 유틸리티
-- `secure_storage.dart`: 보안 저장소
-- `permission_service.dart`: 권한 관리
+- `secure_storage.dart`: 보안 저장소 (모바일: FlutterSecureStorage, 웹: 쿠키)
+- `permission_service.dart`: 권한 관리 (모바일 전용)
 
-### `app/routes/` - 라우팅 설정
+### `mobile/routes/` 또는 `web/routes/` - 라우팅 설정
 
-GetX 라우팅 시스템 설정입니다.
+GetX 라우팅 시스템 설정입니다. 모바일과 웹 각각 독립적으로 존재합니다.
 
 - `app_routes.dart`: 라우트 경로 상수 정의
 - `app_pages.dart`: 페이지 바인딩 정의
 
-### `app/theme/` - 테마 설정
+### `mobile/theme/` 또는 `web/theme/` - 테마 설정
 
-앱 전체 테마 설정을 포함합니다.
+앱 전체 테마 설정을 포함합니다. 모바일과 웹 각각 독립적으로 존재합니다.
 
 ---
 
@@ -301,10 +320,10 @@ GetX 라우팅 시스템 설정입니다.
 
 ### 새로운 페이지 추가 시
 
-1. **폴더 구조 생성**
+1. **폴더 구조 생성** (모바일과 웹 각각 생성)
 
    ```
-   pages/{page_name}/
+   mobile/pages/{page_name}/  또는  web/pages/{page_name}/
    ├── controllers/
    │   └── {page_name}_controller.dart
    ├── views/
@@ -371,13 +390,15 @@ GetX 라우팅 시스템 설정입니다.
    }
    ```
 
-5. **라우팅 추가**
-   - `app_routes.dart`에 경로 상수 추가
-   - `app_pages.dart`에 페이지 바인딩 추가
+5. **라우팅 추가** (모바일/웹 각각)
+   - `mobile/routes/app_routes.dart` 또는 `web/routes/app_routes.dart`에 경로 상수 추가
+   - `mobile/routes/app_pages.dart` 또는 `web/routes/app_pages.dart`에 페이지 바인딩 추가
 
 ### Repository 패턴 사용 시
 
-1. **Data 레이어 생성** (`app/data/{feature}_data.dart`)
+**주의**: 모바일과 웹 각각 독립적으로 파일을 생성해야 합니다.
+
+1. **Data 레이어 생성** (`mobile/data/{feature}_data.dart` 또는 `web/data/{feature}_data.dart`)
 
    ```dart
    class FeatureData {
@@ -387,7 +408,7 @@ GetX 라우팅 시스템 설정입니다.
    }
    ```
 
-2. **DTO 생성** (`app/data/dto/{feature}_dto.dart`)
+2. **DTO 생성** (`mobile/data/dto/{feature}_dto.dart` 또는 `web/data/dto/{feature}_dto.dart`)
 
    ```dart
    class FeatureResponseDto {
@@ -407,7 +428,7 @@ GetX 라우팅 시스템 설정입니다.
    }
    ```
 
-3. **Model 생성** (`app/models/{feature}.dart`)
+3. **Model 생성** (`mobile/models/{feature}.dart` 또는 `web/models/{feature}.dart`)
 
    ```dart
    class Feature {
@@ -425,7 +446,7 @@ GetX 라우팅 시스템 설정입니다.
    }
    ```
 
-4. **Repository 생성** (`app/repositories/{feature}_repository.dart`)
+4. **Repository 생성** (`mobile/repositories/{feature}_repository.dart` 또는 `web/repositories/{feature}_repository.dart`)
 
    ```dart
    class FeatureRepository {
@@ -463,7 +484,7 @@ GetX 라우팅 시스템 설정입니다.
 
 ## 라우팅 시스템
 
-### 라우트 경로 정의 (`app/routes/app_routes.dart`)
+### 라우트 경로 정의 (`mobile/routes/app_routes.dart` 또는 `web/routes/app_routes.dart`)
 
 ```dart
 part of 'app_pages.dart';
@@ -485,7 +506,7 @@ abstract class _Paths {
 }
 ```
 
-### 페이지 바인딩 정의 (`app/routes/app_pages.dart`)
+### 페이지 바인딩 정의 (`mobile/routes/app_pages.dart` 또는 `web/routes/app_pages.dart`)
 
 ```dart
 class AppPages {
@@ -527,7 +548,7 @@ Get.offAllNamed(Routes.login);
 
 ## API 통신 패턴
 
-### API 유틸리티 사용 (`app/utils/api.dart`)
+### API 유틸리티 사용 (`mobile/utils/api.dart` 또는 `web/utils/api.dart`)
 
 ```dart
 // GET 요청
@@ -554,7 +575,7 @@ final response = await API.put<Map<String, dynamic>>(
 final response = await API.delete<void>(ApiPath.feature);
 ```
 
-### API 경로 정의 (`app/utils/api.dart`)
+### API 경로 정의 (`mobile/utils/api.dart` 또는 `web/utils/api.dart`)
 
 ```dart
 class ApiPath {
@@ -694,12 +715,13 @@ Get.offAllNamed(Routes.login);
 
 ### SecureStorage (플랫폼별 저장소)
 
-토큰을 안전하게 저장하는 유틸리티입니다. 플랫폼에 따라 자동으로 적절한 저장소를 사용합니다.
+토큰을 안전하게 저장하는 유틸리티입니다. 모바일과 웹 각각 독립적인 구현을 가집니다.
 
 - **모바일**: `FlutterSecureStorage` 사용 (안전한 저장소)
 - **웹**: 쿠키 기반 저장소 사용 (HTTP 쿠키)
 
 ```dart
+// 모바일과 웹에서 동일한 API 사용
 // 저장
 await LocalStorage.instance.setData(LocalStorage.accessTokenKey, token);
 
@@ -717,23 +739,23 @@ await LocalStorage.instance.clear();
 
 ```
 lib/
-├── app/
+├── mobile/
 │   └── utils/
 │       ├── storage_interface.dart      # 저장소 인터페이스
-│       ├── secure_storage.dart         # 플랫폼별 저장소 래퍼
-│       ├── mobile_storage_adapter.dart # 모바일 저장소 (FlutterSecureStorage)
-│       └── web_storage_stub.dart       # 모바일 빌드용 스텁
+│       ├── secure_storage.dart         # 모바일 저장소 래퍼
+│       └── mobile_storage_adapter.dart # 모바일 저장소 (FlutterSecureStorage)
 └── web/
     └── utils/
-        ├── cookie_storage.dart          # 웹 쿠키 저장소 구현
-        └── web_storage_adapter.dart     # 웹 저장소 어댑터
+        ├── storage_interface.dart      # 저장소 인터페이스
+        ├── secure_storage.dart         # 웹 저장소 래퍼
+        ├── web_storage_adapter.dart    # 웹 저장소 어댑터
+        └── cookie_storage.dart         # 웹 쿠키 저장소 구현
 ```
 
 #### 웹 쿠키 저장소 특징
 
-- **자동 플랫폼 감지**: `kIsWeb`으로 플랫폼 자동 감지
-- **조건부 import**: 웹/모바일 빌드에 따라 적절한 구현 사용
 - **쿠키 설정**: 기본 7일 만료, SameSite=Lax 보안 설정
+- **독립적인 구현**: 모바일과 완전히 분리된 구조
 - **동일한 인터페이스**: 모바일과 웹에서 동일한 API 사용
 
 ---
@@ -883,25 +905,26 @@ try {
 
 ## 플랫폼 분리 및 부트스트랩
 
-이 프로젝트는 모바일과 웹을 분리된 부트스트랩으로 관리합니다. `main.dart`에서 플랫폼을 자동으로 감지하여 적절한 부트스트랩을 로드합니다.
+이 프로젝트는 모바일과 웹을 **완전히 분리된 구조**로 관리합니다. 각 플랫폼은 독립적인 코드베이스를 가지며, 조건부 import를 통해 자동으로 적절한 진입점을 로드합니다.
 
 ### 부트스트랩 구조
 
 ```
 lib/
-├── main/
+├── mobile/
 │   └── bootstrap_mobile.dart    # 모바일 앱 초기화
 └── web/
+    ├── main.dart                 # 웹 진입점
     ├── bootstrap_web.dart       # 웹 앱 초기화
     └── web_app.dart             # 웹 전용 앱 위젯
 ```
 
 ### 플랫폼 자동 분기
 
-`main.dart`는 조건부 import를 사용하여 플랫폼을 자동으로 감지합니다:
+`lib/main.dart`는 조건부 import를 사용하여 플랫폼을 자동으로 감지합니다:
 
 ```dart
-import 'package:naeil_flutter_init/main/bootstrap_mobile.dart'
+import 'package:naeil_flutter_init/mobile/bootstrap_mobile.dart'
     if (dart.library.html) 'package:naeil_flutter_init/web/bootstrap_web.dart'
     as app;
 
@@ -911,10 +934,10 @@ void main() {
 }
 ```
 
-- **모바일**: `dart.library.html`이 없으면 `lib/main/bootstrap_mobile.dart` 로드
+- **모바일**: `dart.library.html`이 없으면 `lib/mobile/bootstrap_mobile.dart` 로드
 - **웹**: `dart.library.html`이 있으면 `lib/web/bootstrap_web.dart` 로드
 
-### 모바일 부트스트랩 (`bootstrap_mobile.dart`)
+### 모바일 부트스트랩 (`mobile/bootstrap_mobile.dart`)
 
 모바일 전용 설정을 포함합니다:
 
@@ -922,6 +945,7 @@ void main() {
 - **ScreenUtil**: 디자인 사이즈 390x844 (일반적인 모바일 화면)
 - **SafeArea**: 노치 및 상태바 영역 고려
 - **MediaQuery**: 텍스트 스케일링 고정
+- **독립적인 코드**: `lib/mobile/` 폴더의 모든 코드 사용
 
 ```dart
 @pragma('vm:entry-point')
@@ -936,7 +960,7 @@ Future<void> bootstrap() async {
     ),
   );
 
-  // AuthService 초기화
+  // AuthService 초기화 (mobile/services/auth_service.dart)
   Get.put(AuthService(), permanent: true);
   await AuthService.to.init();
 
@@ -944,7 +968,7 @@ Future<void> bootstrap() async {
 }
 ```
 
-### 웹 부트스트랩 (`lib/web/bootstrap_web.dart`)
+### 웹 부트스트랩 (`web/bootstrap_web.dart`)
 
 웹 전용 설정을 포함합니다:
 
@@ -953,13 +977,14 @@ Future<void> bootstrap() async {
 - **MediaQuery**: 텍스트 스케일링 고정
 - **SafeArea 제외**: 웹에서는 불필요
 - **SystemChrome 제외**: 웹에서는 불필요
+- **독립적인 코드**: `lib/web/` 폴더의 모든 코드 사용
 
 ```dart
 @pragma('vm:entry-point')
 Future<void> bootstrap() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // AuthService 초기화
+  // AuthService 초기화 (web/services/auth_service.dart)
   Get.put(AuthService(), permanent: true);
   await AuthService.to.init();
 
@@ -967,49 +992,60 @@ Future<void> bootstrap() async {
 }
 ```
 
-### 웹 앱 위젯 (`lib/web/web_app.dart`)
+### 웹 진입점 (`web/main.dart`)
+
+웹 전용 진입점입니다:
+
+```dart
+import 'package:naeil_flutter_init/web/bootstrap_web.dart';
+
+@pragma('vm:entry-point')
+void main() {
+  bootstrap();
+}
+```
+
+### 웹 앱 위젯 (`web/web_app.dart`)
 
 웹 전용 앱 위젯으로 분리되어 있습니다:
 
 - **위치**: `lib/web/web_app.dart`
 - **역할**: 웹 전용 GetMaterialApp 설정
 - **설정**: ScreenUtil, 테마, 라우팅 등 웹 전용 설정 포함
-- **페이지 공유**: `lib/app/pages/`의 모든 페이지와 로직을 모바일과 동일하게 사용
-
-### 웹 쿠키 저장소
-
-웹에서는 쿠키를 사용하여 토큰을 관리합니다:
-
-- **쿠키 저장소**: `lib/web/utils/cookie_storage.dart`
-- **저장소 어댑터**: `lib/web/utils/web_storage_adapter.dart`
-- **자동 플랫폼 감지**: 모바일은 SecureStorage, 웹은 쿠키 자동 사용
-- **동일한 API**: `LocalStorage.instance`를 사용하여 플랫폼에 관계없이 동일한 코드 사용
-
-```dart
-// 웹에서도 모바일과 동일한 코드 사용
-await LocalStorage.instance.setData(LocalStorage.accessTokenKey, token);
-// 웹에서는 쿠키로 저장, 모바일에서는 SecureStorage로 저장
-```
+- **독립적인 페이지**: `lib/web/pages/`의 모든 페이지 사용
 
 ### 플랫폼별 차이점
 
-| 기능                     | 모바일               | 웹                      |
-| ------------------------ | -------------------- | ----------------------- |
-| SystemChrome             | ✅ 사용              | ❌ 불필요               |
-| SafeArea                 | ✅ 사용              | ❌ 불필요               |
-| ScreenUtil 디자인 사이즈 | 390x844              | 1920x1080               |
-| MediaQuery               | ✅ 사용              | ✅ 사용                 |
-| 토큰 저장소              | FlutterSecureStorage | 쿠키 (CookieStorage)    |
-| 페이지/로직              | `lib/app/pages/`     | `lib/app/pages/` (공유) |
+| 기능                     | 모바일                    | 웹                            |
+| ------------------------ | ------------------------- | ----------------------------- |
+| SystemChrome             | ✅ 사용                   | ❌ 불필요                     |
+| SafeArea                 | ✅ 사용                   | ❌ 불필요                     |
+| ScreenUtil 디자인 사이즈 | 390x844                   | 1920x1080                     |
+| MediaQuery               | ✅ 사용                   | ✅ 사용                       |
+| 토큰 저장소              | FlutterSecureStorage      | 쿠키 (CookieStorage)          |
+| 페이지/로직              | `lib/mobile/pages/`       | `lib/web/pages/` (독립적)     |
+| 서비스/유틸              | `lib/mobile/services/` 등 | `lib/web/services/` 등 (독립) |
+| 라우팅                   | `lib/mobile/routes/`      | `lib/web/routes/` (독립적)    |
+
+### 완전한 분리 구조
+
+모바일과 웹은 다음과 같이 완전히 분리되어 있습니다:
+
+- ✅ **독립적인 페이지**: 각 플랫폼별로 독립적인 페이지 코드
+- ✅ **독립적인 서비스**: 각 플랫폼별로 독립적인 서비스 구현
+- ✅ **독립적인 라우팅**: 각 플랫폼별로 독립적인 라우팅 설정
+- ✅ **독립적인 유틸리티**: 각 플랫폼별로 독립적인 유틸리티
+- ✅ **독립적인 테마**: 각 플랫폼별로 독립적인 테마 설정
+- ✅ **독립적인 데이터 레이어**: 각 플랫폼별로 독립적인 API 통신 레이어
 
 ### 공통 설정
 
-두 부트스트랩 모두 다음을 공유합니다:
+두 부트스트랩 모두 다음을 독립적으로 구현합니다:
 
-- **AuthService 초기화**: 인증 서비스 초기화 및 주입
+- **AuthService 초기화**: 각 플랫폼별 AuthService 초기화 및 주입
 - **GetMaterialApp**: GetX 라우팅 및 상태 관리
-- **CustomTheme**: 앱 테마 설정
-- **AppPages**: 라우팅 설정
+- **CustomTheme**: 각 플랫폼별 앱 테마 설정
+- **AppPages**: 각 플랫폼별 라우팅 설정
 - **ScreenUtilInit**: 반응형 UI 설정
 
 ### 웹 실행 방법
@@ -1036,30 +1072,21 @@ flutter build ios
 flutter build apk
 ```
 
-### 플랫폼별 코드 분리 (선택사항)
+### 플랫폼별 코드 분리
 
-특정 플랫폼에서만 필요한 기능이 있다면:
+이 프로젝트는 모바일과 웹을 완전히 분리된 구조로 관리합니다. 각 플랫폼의 코드는 독립적으로 존재하며, 공유되지 않습니다.
 
-```dart
-// 플랫폼별 코드 분리
-import 'package:flutter/foundation.dart' show kIsWeb;
+**새로운 기능 추가 시:**
 
-if (kIsWeb) {
-  // 웹 전용 코드
-} else {
-  // 모바일 전용 코드
-}
-```
+1. **모바일 전용 기능**: `lib/mobile/` 폴더에 추가
+2. **웹 전용 기능**: `lib/web/` 폴더에 추가
+3. **양쪽 플랫폼 모두 필요**: 각 폴더에 독립적으로 구현
 
-또는:
+**주의사항:**
 
-```dart
-import 'package:naeil_flutter_init/utils/mobile_utils.dart'
-    if (dart.library.html) 'package:naeil_flutter_init/utils/web_utils.dart'
-    as platform_utils;
-
-platform_utils.doSomething(); // 플랫폼에 따라 다른 구현
-```
+- 모바일과 웹 코드는 완전히 분리되어 있어 공유되지 않습니다
+- 같은 기능이라도 각 플랫폼에 맞게 독립적으로 구현해야 합니다
+- import 경로가 `mobile/` 또는 `web/`으로 시작하는지 확인하세요
 
 ---
 
@@ -1075,11 +1102,12 @@ platform_utils.doSomething(); // 플랫폼에 따라 다른 구현
 
 ## 추가 참고사항
 
-- 프로젝트 구조는 Feature-based를 우선하되, 공통 기능은 `app/services/`, `app/utils/`에 배치
+- 프로젝트 구조는 Feature-based를 우선하되, 각 플랫폼(`mobile/` 또는 `web/`)별로 독립적으로 구현
 - 새로운 기능 추가 시 Repository 패턴을 우선적으로 적용
 - DTO는 Data 레이어에만 노출하고, Controller는 Model만 사용
 - 테스트 코드 작성 시 Repository 패턴이 테스트 용이성을 높임
-- 페이지 생성때 `naeilcli make page이름 --app` 을 사용하면 편합니다.
+- 페이지 생성 시 `naeilcli make page이름 --app` 명령어 사용 가능 (각 플랫폼별로 생성 필요)
+- **중요**: 모바일과 웹은 완전히 분리된 구조이므로, 같은 기능이라도 각 플랫폼에 맞게 독립적으로 구현해야 합니다
 
 ---
 

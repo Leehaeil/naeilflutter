@@ -1,11 +1,14 @@
 name: naeilflutter
 description: "Flutter 프로젝트 초기화 및 페이지 추가를 위한 CLI 도구. GetX 기반 프로젝트 구조를 자동으로 생성합니다."
-version: 0.0.1
-homepage: https://github.com/yourusername/naeilflutter
-repository: https://github.com/yourusername/naeilflutter
+version: 0.0.2
+homepage: https://github.com/Leehaeil/naeilflutter
+repository: https://github.com/Leehaeil/naeilflutter
 
 environment:
   sdk: ^3.9.2
+
+executables:
+  naeil: naeileun
 
 dependencies:
   args: ^2.6.0

@@ -1,8 +1,7 @@
-import 'package:naeil_flutter_init/app/utils/storage_interface.dart';
+import 'package:naeil_flutter_init/web/utils/storage_interface.dart';
 import 'package:naeil_flutter_init/web/utils/cookie_storage.dart';
 
 /// 웹 전용 저장소 어댑터 (쿠키 기반)
-/// 모바일 빌드에서는 사용되지 않음 (web_storage_stub.dart 사용)
 class WebStorageAdapter implements StorageInterface {
   final CookieStorage _cookieStorage = CookieStorage.instance;
 

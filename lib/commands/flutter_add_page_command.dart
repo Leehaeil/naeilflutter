@@ -27,8 +27,8 @@ class FlutterAddPageCommand {
       final isWebEnabled = _checkWebPlatform(currentDir);
       logger.detail('웹 플랫폼 활성화: ${isWebEnabled ? "예" : "아니오"}');
 
-      // 2. 플랫폼 선택 (웹이 활성화되어 있을 때만)
-      String platform = 'app';
+      // 2. 플랫폼 선택
+      String platform = 'mobile';
       if (isWebEnabled) {
         platform = _selectPlatform();
         logger.detail('선택된 플랫폼: $platform');
@@ -52,8 +52,8 @@ class FlutterAddPageCommand {
 
       logger.success('✅ 페이지가 성공적으로 추가되었습니다!');
       logger.info('\n📝 다음 단계:');
-      logger.info('  - 라우팅 설정을 확인하세요: lib/app/routes/app_pages.dart');
-      logger.info('  - 생성된 파일을 확인하세요: lib/app/pages/$pageName/');
+      logger.info('  - 라우팅 설정을 확인하세요: lib/$platform/routes/app_pages.dart');
+      logger.info('  - 생성된 파일을 확인하세요: lib/$platform/pages/$pageName/');
 
       exit(0);
     } catch (e, stackTrace) {
@@ -65,20 +65,16 @@ class FlutterAddPageCommand {
 
   /// 웹 플랫폼 활성화 여부 확인
   bool _checkWebPlatform(Directory projectDir) {
-    // 방법 1: web 폴더 존재 확인
-    final webDir = Directory(path.join(projectDir.path, 'web'));
-    if (webDir.existsSync()) {
+    // lib/web 폴더 존재 확인
+    final webLibDir = Directory(path.join(projectDir.path, 'lib', 'web'));
+    if (webLibDir.existsSync()) {
       return true;
     }
 
-    // 방법 2: pubspec.yaml에서 flutter 플랫폼 확인
-    final pubspecFile = File(path.join(projectDir.path, 'pubspec.yaml'));
-    if (pubspecFile.existsSync()) {
-      final content = pubspecFile.readAsStringSync();
-      // web 관련 설정이 있는지 확인
-      if (content.contains('web') || content.contains('platforms:')) {
-        return true;
-      }
+    // web 폴더 존재 확인 (Flutter 프로젝트 루트)
+    final webDir = Directory(path.join(projectDir.path, 'web'));
+    if (webDir.existsSync()) {
+      return true;
     }
 
     return false;
@@ -90,10 +86,10 @@ class FlutterAddPageCommand {
 
     final platform = Select(
       prompt: '어느 플랫폼에 추가하시겠습니까?',
-      options: ['app', 'web'],
+      options: ['mobile', 'web'],
     ).interact();
 
-    return platform == 0 ? 'app' : 'web';
+    return platform == 0 ? 'mobile' : 'web';
   }
 
   /// 페이지 이름 입력
@@ -135,9 +131,7 @@ class FlutterAddPageCommand {
     required bool useController,
   }) async {
     // 페이지 경로 결정
-    final basePath = platform == 'web'
-        ? path.join(currentDir.path, 'lib', 'web', 'pages')
-        : path.join(currentDir.path, 'lib', 'app', 'pages');
+    final basePath = path.join(currentDir.path, 'lib', platform, 'pages');
 
     final pageDir = Directory(path.join(basePath, pageName));
     final controllersDir = Directory(path.join(pageDir.path, 'controllers'));
@@ -306,9 +300,7 @@ class ${className}Binding extends Bindings {
     required bool useController,
   }) async {
     // 라우팅 파일 경로 결정
-    final routesDir = platform == 'web'
-        ? path.join(currentDir.path, 'lib', 'web', 'routes')
-        : path.join(currentDir.path, 'lib', 'app', 'routes');
+    final routesDir = path.join(currentDir.path, 'lib', platform, 'routes');
 
     final appRoutesFile = File(path.join(routesDir, 'app_routes.dart'));
     final appPagesFile = File(path.join(routesDir, 'app_pages.dart'));

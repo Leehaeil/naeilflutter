@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:naeil_flutter_init/app/routes/app_pages.dart';
-import 'package:naeil_flutter_init/app/theme/custom_theme.dart';
+import 'package:naeil_flutter_init/web/routes/app_pages.dart';
+import 'package:naeil_flutter_init/web/theme/custom_theme.dart';
 
 /// 웹 전용 앱 위젯
 class WebApp extends StatelessWidget {
