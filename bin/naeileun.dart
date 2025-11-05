@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:args/args.dart';
 import 'package:mason_logger/mason_logger.dart';
 import 'package:naeilflutter/commands/flutter_init_command.dart';
+import 'package:naeilflutter/commands/flutter_add_page_command.dart';
 
 void main(List<String> args) async {
   final logger = Logger();
@@ -13,6 +14,10 @@ void main(List<String> args) async {
       ArgParser()
         ..addCommand(
           'init',
+          ArgParser(),
+        )
+        ..addCommand(
+          'addpage',
           ArgParser(),
         ),
     );
@@ -34,9 +39,19 @@ void main(List<String> args) async {
           logger.detail('스택 트레이스: $stackTrace');
           exit(1);
         }
+      } else if (flutterCommand == 'addpage') {
+        try {
+          await FlutterAddPageCommand(logger).run();
+          // run() 메서드 내에서 이미 exit(0)를 호출하지만, 혹시 모를 경우를 대비
+          exit(0);
+        } catch (e, stackTrace) {
+          logger.err('명령어 실행 중 오류: $e');
+          logger.detail('스택 트레이스: $stackTrace');
+          exit(1);
+        }
       } else {
         logger.err('알 수 없는 명령어: flutter $flutterCommand');
-        logger.info('사용 가능한 명령어: flutter init');
+        logger.info('사용 가능한 명령어: flutter init, flutter addpage');
         exit(1);
       }
     } else {
@@ -55,8 +70,10 @@ Flutter 프로젝트 초기화 CLI 도구
 
 사용법:
   naeileun flutter init
+  naeileun flutter addpage
 
 명령어:
-  flutter init    Flutter 프로젝트를 생성하고 초기화합니다
+  flutter init     Flutter 프로젝트를 생성하고 초기화합니다
+  flutter addpage  Flutter 프로젝트에 새 페이지를 추가합니다
   ''');
 }
