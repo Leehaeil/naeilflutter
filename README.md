@@ -1,14 +1,27 @@
 # naeilflutter
 
-Flutter 프로젝트 초기화 CLI 도구입니다.
+Flutter 프로젝트 초기화 및 페이지 추가를 위한 CLI 도구입니다. GetX 기반 프로젝트 구조를 자동으로 생성합니다.
 
 ## 기능
 
-- `naeileun flutter init`: Flutter 프로젝트를 생성하고 sample 폴더 구조에 맞춰 초기화
+- `naeileun flutter init`: Flutter 프로젝트를 생성하고 GetX 기반 프로젝트 구조로 초기화
+- `naeileun flutter addpage`: 기존 Flutter 프로젝트에 새 페이지를 추가 (View, Controller, Binding 자동 생성)
 
 ## 설치
 
+### pub.dev에서 설치 (권장)
+
 ```bash
+dart pub global activate naeilflutter
+```
+
+### 개발 버전 설치
+
+```bash
+# 저장소 클론
+git clone https://github.com/yourusername/naeilflutter.git
+cd naeilflutter
+
 # 의존성 설치
 dart pub get
 
@@ -67,20 +80,77 @@ $ naeileun flutter init
   flutter run
 ```
 
+### Flutter 페이지 추가
+
+기존 Flutter 프로젝트에 새 페이지를 추가할 수 있습니다.
+
+```bash
+naeileun flutter addpage
+```
+
+명령어 실행 시 다음 정보를 입력받습니다:
+
+1. **플랫폼 선택** (웹 플랫폼이 활성화되어 있는 경우): `app` 또는 `web`
+2. **페이지 이름**: 페이지 이름 (예: `profile`, `settings`)
+3. **컨트롤러 사용 여부**: GetX Controller 사용 여부
+
+#### 실행 예시
+
+```bash
+$ naeileun flutter addpage
+
+📄 Flutter 페이지를 추가합니다...
+
+플랫폼을 선택하세요:
+어느 플랫폼에 추가하시겠습니까?
+  ❯ app
+    web
+
+페이지 이름을 입력하세요 (예: profile, settings): profile
+컨트롤러를 사용하시겠습니까? (Y/n): y
+
+✅ 페이지가 성공적으로 추가되었습니다!
+
+📝 다음 단계:
+  - 라우팅 설정을 확인하세요: lib/app/routes/app_pages.dart
+  - 생성된 파일을 확인하세요: lib/app/pages/profile/
+```
+
+#### 생성되는 파일 구조
+
+컨트롤러를 사용하는 경우:
+```
+lib/app/pages/{page_name}/
+├── controllers/
+│   └── {page_name}_controller.dart
+├── views/
+│   └── {page_name}_view.dart
+└── bindings/
+    └── {page_name}_binding.dart
+```
+
+컨트롤러를 사용하지 않는 경우:
+```
+lib/app/pages/{page_name}/
+└── views/
+    └── {page_name}_view.dart
+```
+
 ## 프로젝트 구조
 
 ```
 naeilflutter/
 ├── bin/
-│   └── naeileun.dart          # CLI 진입점
+│   └── naeileun.dart                    # CLI 진입점
 ├── lib/
 │   ├── commands/
-│   │   └── flutter_init_command.dart  # flutter init 명령어 구현
+│   │   ├── flutter_init_command.dart    # flutter init 명령어 구현
+│   │   └── flutter_add_page_command.dart # flutter addpage 명령어 구현
 │   ├── utils/
-│   │   ├── flutter_runner.dart        # Flutter 명령어 실행
-│   │   └── project_initializer.dart   # 프로젝트 초기화 로직
-│   └── naeilflutter.dart      # 라이브러리 export
-├── sample/                     # Flutter 프로젝트 템플릿
+│   │   ├── flutter_runner.dart          # Flutter 명령어 실행
+│   │   └── project_initializer.dart    # 프로젝트 초기화 로직
+│   └── naeilflutter.dart                # 라이브러리 export
+├── sample/                               # Flutter 프로젝트 템플릿
 └── pubspec.yaml
 ```
 
