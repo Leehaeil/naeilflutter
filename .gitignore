@@ -56,3 +56,6 @@ migrate_working_dir/
 
 # Web build outputs
 **/web/build/
+
+# Generated sample projects
+sample/
